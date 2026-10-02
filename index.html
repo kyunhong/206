@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2f6b4f">
+  <title>학급특색활동 아이디어</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <div class="brand">
+        <small id="className">우리 반</small>
+        <h1>학급특색활동 아이디어 모음</h1>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="board">아이디어 보기</button>
+        <button role="tab" aria-selected="false" data-tab="write">제안하기</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="board">
+      <div class="toolbar">
+        <span class="count" id="count"></span>
+        <select id="sort" aria-label="정렬">
+          <option value="new">최신순</option>
+          <option value="like">공감순</option>
+        </select>
+      </div>
+      <div class="chips filter-chips" id="filters"></div>
+      <div id="list"></div>
+    </section>
+
+    <section id="write" hidden>
+      <div class="notice" id="closedNotice" hidden>
+        <strong>지금은 제안을 받고 있지 않아요.</strong> 선생님이 제안 기간을 열면 다시 제출할 수 있어요.
+      </div>
+      <div class="notice">
+        <strong>이름은 선생님만 볼 수 있어요.</strong><br>
+        친구들에게는 <b>익명</b>으로 보여요. 생활기록부 기록을 위해 이름을 정확히 적어 주세요.
+      </div>
+      <form id="form" novalidate>
+        <div class="field">
+          <label for="name">이름</label>
+          <input id="name" name="name" autocomplete="name" placeholder="예: 홍길동" maxlength="20">
+        </div>
+        <div class="field">
+          <label for="title">활동명</label>
+          <p class="hint">한눈에 알아볼 수 있는 이름을 지어 주세요.</p>
+          <input id="title" name="title" placeholder="예: 우리 반 감사 릴레이 편지" maxlength="60">
+        </div>
+        <div class="field">
+          <label for="content">구체적인 활동 내용</label>
+          <p class="hint">누가, 언제, 어떻게 진행하는지 단계별로 적어 주세요.</p>
+          <textarea id="content" name="content" maxlength="1500" placeholder="예: 매주 월요일 아침 조회 시간에 한 명씩 돌아가며 친구에게 감사 편지를 쓰고…"></textarea>
+          <div class="counter" data-for="content"></div>
+        </div>
+        <div class="field">
+          <label for="effect">기대 효과</label>
+          <p class="hint">이 활동을 하면 우리 반이 어떻게 달라질까요?</p>
+          <textarea id="effect" name="effect" maxlength="1000" placeholder="예: 서로를 더 잘 알게 되고, 긍정적인 학급 분위기가 만들어진다."></textarea>
+          <div class="counter" data-for="effect"></div>
+        </div>
+        <div class="field">
+          <span class="label">핵심 역량</span>
+          <p class="hint">이 활동으로 기를 수 있는 역량을 모두 골라 주세요.</p>
+          <div class="chips" id="compChips"></div>
+          <textarea id="competencyNote" name="competencyNote" maxlength="600" style="margin-top:10px;min-height:80px"
+            placeholder="(선택) 어떤 점에서 그 역량이 길러지는지 적어 주세요."></textarea>
+        </div>
+        <p class="error" id="formError" role="alert"></p>
+        <button class="btn primary" type="submit" id="submitBtn">아이디어 제출하기</button>
+      </form>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
