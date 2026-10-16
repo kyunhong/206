@@ -51,7 +51,7 @@ const el = (tag, attrs = {}, ...children) => {
   return n;
 };
 
-let config = { competencies: [] };
+let config = { competencies: [], counselTopics: [] };
 let ideas = [];
 let filter = null;
 const selected = new Set();
@@ -221,24 +221,103 @@ $('#form').addEventListener('submit', async (e) => {
   }
 });
 
+// ---------- 진학 상담 고민 ----------
+// 민감한 내용이라 임시 저장하지 않고, 제출 후에는 화면에서도 지운다
+const topics = new Set();
+
+const renderTopicChips = () => {
+  $('#topicChips').replaceChildren(...(config.counselTopics || []).map((t) => {
+    const b = el('button', { class: 'chip', type: 'button', 'aria-pressed': String(topics.has(t)) }, t);
+    b.addEventListener('click', () => {
+      topics.has(t) ? topics.delete(t) : topics.add(t);
+      b.setAttribute('aria-pressed', String(topics.has(t)));
+    });
+    return b;
+  }));
+};
+
+const resetCounsel = () => {
+  $('#counselForm').reset();
+  topics.clear();
+  renderTopicChips();
+  $('#cContent').dispatchEvent(new Event('input'));
+  $('#counselError').textContent = '';
+};
+
+$('#counselForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('#counselError').textContent = '';
+  const btn = $('#counselBtn');
+  btn.disabled = true;
+  btn.textContent = '보내는 중…';
+  try {
+    await api('counsel', { name: $('#cName').value, hope: $('#cHope').value, content: $('#cContent').value, topics: [...topics] });
+    resetCounsel();
+    $('#counselForm').hidden = true;
+    $('#counselDone').hidden = false;
+    window.scrollTo(0, 0);
+  } catch (err) {
+    $('#counselError').textContent = err.message;
+  } finally {
+    btn.disabled = !config.counselOpen;
+    btn.textContent = '선생님께 보내기';
+  }
+});
+
+$('#counselAgain').addEventListener('click', () => {
+  $('#counselDone').hidden = true;
+  $('#counselForm').hidden = false;
+  window.scrollTo(0, 0);
+});
+
+// ---------- 화면 전환 (#ideas, #counsel, 그 외는 메뉴) ----------
+const VIEW_TITLES = { ideas: '학급특색활동 아이디어 모음', counsel: '진학 상담 고민 보내기' };
+let ideasStarted = false;
+
+const route = () => {
+  const view = location.hash === '#ideas' || location.hash === '#counsel' ? location.hash.slice(1) : 'home';
+  document.querySelectorAll('[data-view]').forEach((s) => (s.hidden = s.dataset.view !== view));
+  $('#backLink').hidden = view === 'home';
+  $('#ideaTabs').hidden = view !== 'ideas';
+  $('#className').hidden = view === 'home';
+  $('#pageTitle').textContent = VIEW_TITLES[view] || config.className || '';
+  document.title = `${config.className || ''} ${VIEW_TITLES[view] || ''}`.trim();
+  if (view === 'counsel') {
+    $('#counselDone').hidden = true;
+    $('#counselForm').hidden = false;
+  }
+  if (view === 'ideas' && !ideasStarted && config.competencies.length) {
+    ideasStarted = true;
+    load();
+    setInterval(() => { if (!document.hidden && location.hash === '#ideas') load(); }, 60000);
+  }
+  window.scrollTo(0, 0);
+};
+window.addEventListener('hashchange', route);
+
 // ---------- 시작 ----------
 (async () => {
   $('#submitBtn').disabled = true;
+  $('#counselBtn').disabled = true;
   $('#list').replaceChildren(el('div', { class: 'empty' }, '아이디어를 불러오는 중…'));
+  route();
   try {
     config = await api('config');
   } catch (e) {
     $('#list').replaceChildren(el('div', { class: 'empty' }, e.message));
+    $('#counselError').textContent = e.message;
+    toast(e.message);
     return;
   }
   $('#className').textContent = config.className;
-  document.title = `${config.className} 학급특색활동 아이디어`;
   $('#closedNotice').hidden = config.open;
   $('#submitBtn').disabled = !config.open;
+  $('#counselClosed').hidden = config.counselOpen;
+  $('#counselBtn').disabled = !config.counselOpen;
   loadDraft();
   renderFilters();
   renderCompChips();
+  renderTopicChips();
   document.querySelectorAll('textarea').forEach((t) => t.dispatchEvent(new Event('input')));
-  load();
-  setInterval(() => { if (!document.hidden) load(); }, 60000);
+  route();
 })();

@@ -9,6 +9,8 @@
   --accent-text: #ffffff;
   --danger: #b3412f;
   --heart: #d9485f;
+  --counsel: #3d5a80;
+  --counsel-soft: #e8eef6;
   --radius: 14px;
   color-scheme: light;
 }
@@ -24,11 +26,14 @@
     --accent-text: #0f1a14;
     --danger: #e0806f;
     --heart: #ff7a8e;
+    --counsel: #9db4d6;
+    --counsel-soft: #222a35;
     color-scheme: dark;
   }
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
@@ -123,3 +128,32 @@ form .counter { text-align: right; color: var(--muted); font-size: 12px; margin-
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+
+/* 메뉴 / 화면 전환 */
+.back { display: inline-block; margin-top: 12px; color: var(--muted); font-size: 14px; text-decoration: none; }
+.back + .brand { padding-top: 2px; }
+.home-lead { color: var(--muted); margin: 24px 0 4px; }
+.menu-card {
+  display: block; text-decoration: none; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+  border-radius: var(--radius); padding: 18px 16px; margin: 12px 0;
+}
+.menu-card.counsel { border-left-color: var(--counsel); }
+.menu-card:active { background: var(--accent-soft); }
+.menu-title { display: block; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+.menu-desc { display: block; color: var(--muted); font-size: 14px; margin: 6px 0 12px; }
+.menu-go { font-size: 14px; font-weight: 600; color: var(--accent); }
+.menu-card.counsel .menu-go { color: var(--counsel); }
+
+/* 진학 상담 */
+.notice.private { background: var(--counsel-soft); }
+.notice.private strong { color: var(--counsel); }
+.optional { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 4px; }
+.examples { border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 14px; color: var(--muted); }
+.examples p { margin: 0 0 4px; font-weight: 600; color: var(--text); }
+.examples ul { margin: 0; padding-left: 18px; }
+.examples li { margin: 2px 0; }
+.done { text-align: center; padding: 40px 8px; }
+.done-title { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+.done p { margin: 0 0 20px; color: var(--muted); }
+.done .btn { display: block; width: 100%; margin: 8px 0; text-decoration: none; }

@@ -11,11 +11,12 @@
 <body>
   <header class="top">
     <div class="wrap">
+      <a class="back" href="#" id="backLink" hidden>← 메뉴</a>
       <div class="brand">
         <small id="className">매홀고</small>
-        <h1>매홀고 2학년 6반 학급특색활동 아이디어 모음</h1>
+        <h1 id="pageTitle">매홀고 2학년 6반</h1>
       </div>
-      <nav class="tabs" role="tablist">
+      <nav class="tabs" role="tablist" id="ideaTabs" hidden>
         <button role="tab" aria-selected="true" data-tab="board">아이디어 보기</button>
         <button role="tab" aria-selected="false" data-tab="write">제안하기</button>
       </nav>
@@ -23,62 +24,134 @@
   </header>
 
   <main class="wrap">
-    <section id="board">
-      <div class="notice">
-        <strong>학급 특색 활동은 생활기록부 자율, 자치 항목에 기재될 학급 내 활동입니다.</strong><br>
-        본인의 관심사와 진로 역량을 잘 펼칠 수 있는 활동을 직접 제안하면 선생님이 검토 후 실제 활동으로 진행할 예정입니다.
-      </div>
-      <div class="toolbar">
-        <span class="count" id="count"></span>
-        <select id="sort" aria-label="정렬">
-          <option value="new">최신순</option>
-          <option value="like">공감순</option>
-        </select>
-      </div>
-      <div class="chips filter-chips" id="filters"></div>
-      <div id="list"></div>
+    <!-- 메뉴 -->
+    <section id="home" data-view="home" hidden>
+      <p class="home-lead">무엇을 하러 왔나요?</p>
+      <a class="menu-card" href="#ideas">
+        <span class="menu-title">학급특색활동 아이디어</span>
+        <span class="menu-desc">우리 반에서 해 보고 싶은 활동을 제안하고, 친구들의 아이디어에 공감해 보세요. 친구들에게는 익명으로 보여요.</span>
+        <span class="menu-go">아이디어 보러 가기 →</span>
+      </a>
+      <a class="menu-card counsel" href="#counsel">
+        <span class="menu-title">진학 상담 고민 보내기</span>
+        <span class="menu-desc">성적, 대학, 진로처럼 혼자 고민되는 이야기를 선생님께 보내 주세요. 선생님만 볼 수 있어요.</span>
+        <span class="menu-go">고민 보내기 →</span>
+      </a>
     </section>
 
-    <section id="write" hidden>
-      <div class="notice" id="closedNotice" hidden>
-        <strong>지금은 제안을 받고 있지 않아요.</strong> 선생님이 제안 기간을 열면 다시 제출할 수 있어요.
+    <!-- 학급특색활동 아이디어 -->
+    <section id="ideas" data-view="ideas" hidden>
+      <section id="board">
+        <div class="notice">
+          <strong>학급 특색 활동은 생활기록부 자율, 자치 항목에 기재될 학급 내 활동입니다.</strong><br>
+          본인의 관심사와 진로 역량을 잘 펼칠 수 있는 활동을 직접 제안하면 선생님이 검토 후 실제 활동으로 진행할 예정입니다.
+        </div>
+        <div class="toolbar">
+          <span class="count" id="count"></span>
+          <select id="sort" aria-label="정렬">
+            <option value="new">최신순</option>
+            <option value="like">공감순</option>
+          </select>
+        </div>
+        <div class="chips filter-chips" id="filters"></div>
+        <div id="list"></div>
+      </section>
+
+      <section id="write" hidden>
+        <div class="notice" id="closedNotice" hidden>
+          <strong>지금은 제안을 받고 있지 않아요.</strong> 선생님이 제안 기간을 열면 다시 제출할 수 있어요.
+        </div>
+        <div class="notice">
+          <strong>이름은 선생님만 볼 수 있어요.</strong><br>
+          친구들에게는 <b>익명</b>으로 보여요. 이름을 정확히 적어 주세요.
+        </div>
+        <form id="form" novalidate>
+          <div class="field">
+            <label for="name">이름</label>
+            <input id="name" name="name" autocomplete="name" placeholder="예: 메가홍균" maxlength="20">
+          </div>
+          <div class="field">
+            <label for="title">활동명</label>
+            <p class="hint">한눈에 알아볼 수 있는 이름을 지어 주세요.</p>
+            <input id="title" name="title" placeholder="예: 우리 반 감사 릴레이 편지" maxlength="60">
+          </div>
+          <div class="field">
+            <label for="content">구체적인 활동 내용</label>
+            <p class="hint">누가, 언제, 어떻게 진행하는지 단계별로 적어 주세요.</p>
+            <textarea id="content" name="content" maxlength="1500" placeholder="예: 매주 월요일 아침 조회 시간에 한 명씩 돌아가며 친구에게 감사 편지를 쓰고…"></textarea>
+            <div class="counter" data-for="content"></div>
+          </div>
+          <div class="field">
+            <label for="effect">기대 효과</label>
+            <p class="hint">이 활동을 하면 우리 반이 어떻게 달라질까요?</p>
+            <textarea id="effect" name="effect" maxlength="1000" placeholder="예: 서로를 더 잘 알게 되고, 긍정적인 학급 분위기가 만들어진다."></textarea>
+            <div class="counter" data-for="effect"></div>
+          </div>
+          <div class="field">
+            <span class="label">핵심 역량</span>
+            <p class="hint">이 활동으로 기를 수 있는 역량을 모두 골라 주세요.</p>
+            <div class="chips" id="compChips"></div>
+            <textarea id="competencyNote" name="competencyNote" maxlength="600" style="margin-top:10px;min-height:80px"
+              placeholder="(선택) 어떤 점에서 그 역량이 길러지는지 적어 주세요."></textarea>
+          </div>
+          <p class="error" id="formError" role="alert"></p>
+          <button class="btn primary" type="submit" id="submitBtn">아이디어 제출하기</button>
+        </form>
+      </section>
+    </section>
+
+    <!-- 진학 상담 고민 -->
+    <section id="counsel" data-view="counsel" hidden>
+      <div class="notice" id="counselClosed" hidden>
+        <strong>지금은 상담 신청을 받고 있지 않아요.</strong> 급한 고민이라면 선생님께 직접 말해 주세요.
       </div>
-      <div class="notice">
-        <strong>이름은 선생님만 볼 수 있어요.</strong><br>
-        친구들에게는 <b>익명</b>으로 보여요. 이름을 정확히 적어 주세요.
+      <div class="notice private">
+        <strong>여기에 쓴 내용은 선생님만 볼 수 있어요.</strong><br>
+        친구들에게는 보이지 않고, 제출한 뒤에는 이 화면에도 남지 않아요. 편하게 적어 주세요.
       </div>
-      <form id="form" novalidate>
+
+      <form id="counselForm" novalidate>
         <div class="field">
-          <label for="name">이름</label>
-          <input id="name" name="name" autocomplete="name" placeholder="예: 메가홍균" maxlength="20">
+          <label for="cName">이름</label>
+          <input id="cName" autocomplete="off" placeholder="예: 메가홍균" maxlength="20">
         </div>
         <div class="field">
-          <label for="title">활동명</label>
-          <p class="hint">한눈에 알아볼 수 있는 이름을 지어 주세요.</p>
-          <input id="title" name="title" placeholder="예: 우리 반 감사 릴레이 편지" maxlength="60">
+          <span class="label">고민 분야</span>
+          <p class="hint">해당하는 것을 모두 골라 주세요.</p>
+          <div class="chips" id="topicChips"></div>
         </div>
         <div class="field">
-          <label for="content">구체적인 활동 내용</label>
-          <p class="hint">누가, 언제, 어떻게 진행하는지 단계별로 적어 주세요.</p>
-          <textarea id="content" name="content" maxlength="1500" placeholder="예: 매주 월요일 아침 조회 시간에 한 명씩 돌아가며 친구에게 감사 편지를 쓰고…"></textarea>
-          <div class="counter" data-for="content"></div>
+          <label for="cHope">희망 진로·학과 <span class="optional">선택</span></label>
+          <input id="cHope" autocomplete="off" placeholder="예: 간호학과, 자동차 정비, 아직 모르겠어요" maxlength="60">
         </div>
         <div class="field">
-          <label for="effect">기대 효과</label>
-          <p class="hint">이 활동을 하면 우리 반이 어떻게 달라질까요?</p>
-          <textarea id="effect" name="effect" maxlength="1000" placeholder="예: 서로를 더 잘 알게 되고, 긍정적인 학급 분위기가 만들어진다."></textarea>
-          <div class="counter" data-for="effect"></div>
+          <label for="cContent">고민 내용</label>
+          <div class="examples">
+            <p>이런 고민도 괜찮아요</p>
+            <ul>
+              <li>지금 성적으로 갈 수 있는 대학이 어디인지 궁금해요.</li>
+              <li>성적이 계속 떨어져서 공부 방법을 바꿔야 할지 모르겠어요.</li>
+              <li>공부 말고 내가 잘할 수 있는 게 뭔지 찾고 싶어요.</li>
+              <li>앞으로 뭘 하며 살아야 할지 막막해요.</li>
+              <li>위탁교육을 가면 졸업이나 진학에 불리하지 않을까요?</li>
+              <li>4년제랑 전문대 중에 어디로 가야 할지 고민이에요.</li>
+              <li>희망 학과는 있는데 생활기록부를 어떻게 채워야 할지 모르겠어요.</li>
+              <li>부모님이 원하는 진로와 제가 원하는 진로가 달라요.</li>
+            </ul>
+          </div>
+          <textarea id="cContent" maxlength="2000" placeholder="지금 가장 고민되는 것을 편하게 적어 주세요."></textarea>
+          <div class="counter" data-for="cContent"></div>
         </div>
-        <div class="field">
-          <span class="label">핵심 역량</span>
-          <p class="hint">이 활동으로 기를 수 있는 역량을 모두 골라 주세요.</p>
-          <div class="chips" id="compChips"></div>
-          <textarea id="competencyNote" name="competencyNote" maxlength="600" style="margin-top:10px;min-height:80px"
-            placeholder="(선택) 어떤 점에서 그 역량이 길러지는지 적어 주세요."></textarea>
-        </div>
-        <p class="error" id="formError" role="alert"></p>
-        <button class="btn primary" type="submit" id="submitBtn">아이디어 제출하기</button>
+        <p class="error" id="counselError" role="alert"></p>
+        <button class="btn primary" type="submit" id="counselBtn">선생님께 보내기</button>
       </form>
+
+      <div class="done" id="counselDone" hidden>
+        <p class="done-title">선생님께 전달됐어요.</p>
+        <p>고민을 털어놓아 줘서 고마워요. 선생님이 읽어 보고 따로 이야기 나눌게요.</p>
+        <button class="btn" type="button" id="counselAgain">다른 고민 더 보내기</button>
+        <a class="btn" href="#">메뉴로 돌아가기</a>
+      </div>
     </section>
   </main>
 
