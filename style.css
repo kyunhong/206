@@ -11,6 +11,7 @@
   --heart: #d9485f;
   --counsel: #3d5a80;
   --counsel-soft: #e8eef6;
+  --reserve: #8a5a2b;
   --radius: 14px;
   color-scheme: light;
 }
@@ -28,6 +29,7 @@
     --heart: #ff7a8e;
     --counsel: #9db4d6;
     --counsel-soft: #222a35;
+    --reserve: #d9a873;
     color-scheme: dark;
   }
 }
@@ -144,6 +146,8 @@ form .counter { text-align: right; color: var(--muted); font-size: 12px; margin-
 .menu-desc { display: block; color: var(--muted); font-size: 14px; margin: 6px 0 12px; }
 .menu-go { font-size: 14px; font-weight: 600; color: var(--accent); }
 .menu-card.counsel .menu-go { color: var(--counsel); }
+.menu-card.reserve { border-left-color: var(--reserve); }
+.menu-card.reserve .menu-go { color: var(--reserve); }
 
 /* 진학 상담 */
 .notice.private { background: var(--counsel-soft); }
