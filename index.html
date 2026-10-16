@@ -111,28 +111,82 @@
         친구들에게는 보이지 않고, 제출한 뒤에는 이 화면에도 남지 않아요. 편하게 적어 주세요.
       </div>
 
+      <!-- 선택지 목록은 서버(Code.gs)에서 받아온다. data-single이 있으면 하나만 고를 수 있다. -->
       <form id="counselForm" novalidate>
-        <div class="field-row">
-          <div class="field num">
-            <label for="cNo">번호</label>
-            <input id="cNo" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="예: 7" maxlength="2">
+        <div class="steps" aria-hidden="true">
+          <span class="step-count" id="stepCount"></span>
+          <span class="step-bar"><span id="stepBar"></span></span>
+        </div>
+
+        <!-- 1단계 -->
+        <fieldset class="step" data-step="1" data-name="나에 대해">
+          <div class="field-row">
+            <div class="field num">
+              <label for="cNo">번호</label>
+              <input id="cNo" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="예: 7" maxlength="2">
+            </div>
+            <div class="field">
+              <label for="cName">이름</label>
+              <input id="cName" autocomplete="off" placeholder="예: 메가홍균" maxlength="20">
+            </div>
           </div>
           <div class="field">
-            <label for="cName">이름</label>
-            <input id="cName" autocomplete="off" placeholder="예: 메가홍균" maxlength="20">
+            <span class="label">졸업 후 계획</span>
+            <p class="hint">지금 생각에 가장 가까운 것 하나를 골라 주세요.</p>
+            <div class="chips" data-group="plan" data-single data-label="졸업 후 계획"></div>
           </div>
-        </div>
+          <div class="field">
+            <span class="label">진로를 얼마나 정했나요? <span class="optional">선택</span></span>
+            <div class="chips" data-group="decision" data-single></div>
+          </div>
+          <div class="field">
+            <label for="cHope">희망 진로·학과 <span class="optional">선택</span></label>
+            <input id="cHope" autocomplete="off" placeholder="예: 간호학과, 자동차 정비, 아직 모르겠어요" maxlength="60">
+          </div>
+          <div class="field">
+            <span class="label">관심 계열 <span class="optional">선택</span></span>
+            <p class="hint">관심 있는 것을 모두 골라 주세요.</p>
+            <div class="chips" data-group="fields"></div>
+          </div>
+        </fieldset>
+
+        <!-- 2단계 -->
+        <fieldset class="step" data-step="2" data-name="입시 방향" hidden>
+          <div class="field">
+            <span class="label">관심 있는 전형 <span class="optional">선택</span></span>
+            <p class="hint">여러 개 골라도 돼요.</p>
+            <div class="chips" data-group="admission"></div>
+          </div>
+          <div class="field">
+            <span class="label">희망 지역 <span class="optional">선택</span></span>
+            <p class="hint">여러 개 골라도 돼요.</p>
+            <div class="chips" data-group="region"></div>
+          </div>
+          <div class="field">
+            <span class="label">지금 내 성적에 대한 생각 <span class="optional">선택</span></span>
+            <div class="chips" data-group="gradeFeel" data-single></div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="cStrong">자신 있는 과목 <span class="optional">선택</span></label>
+              <input id="cStrong" autocomplete="off" placeholder="예: 영어, 체육" maxlength="40">
+            </div>
+            <div class="field">
+              <label for="cWeak">어려운 과목 <span class="optional">선택</span></label>
+              <input id="cWeak" autocomplete="off" placeholder="예: 수학" maxlength="40">
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 3단계 -->
+        <fieldset class="step" data-step="3" data-name="고민" hidden>
         <div class="field">
           <span class="label">고민 분야</span>
           <p class="hint">해당하는 것을 모두 골라 주세요.</p>
-          <div class="chips" id="topicChips"></div>
+          <div class="chips" data-group="topics" data-label="고민 분야"></div>
         </div>
         <div class="field">
-          <label for="cHope">희망 진로·학과 <span class="optional">선택</span></label>
-          <input id="cHope" autocomplete="off" placeholder="예: 간호학과, 자동차 정비, 아직 모르겠어요" maxlength="60">
-        </div>
-        <div class="field">
-          <label for="cContent">고민 내용</label>
+          <label for="cContent">고민 내용 <span class="optional">선택</span></label>
           <div class="examples">
             <p>이런 고민도 괜찮아요</p>
             <ul>
@@ -156,8 +210,14 @@
             placeholder="예: 내 성적으로 갈 수 있는 4년제, 전문대 학교 / 위탁교육 학과 / 성적 반영 과목이 적은 학교 / 충청권 학교"></textarea>
           <div class="counter" data-for="cRequest"></div>
         </div>
+        </fieldset>
+
         <p class="error" id="counselError" role="alert"></p>
-        <button class="btn primary" type="submit" id="counselBtn">제출하기</button>
+        <div class="step-nav">
+          <button class="btn" type="button" id="stepPrev">이전</button>
+          <button class="btn primary" type="button" id="stepNext">다음</button>
+          <button class="btn primary" type="submit" id="counselBtn">제출하기</button>
+        </div>
       </form>
 
       <div class="done" id="counselDone" hidden>

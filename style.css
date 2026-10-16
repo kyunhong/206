@@ -160,3 +160,14 @@ form .counter { text-align: right; color: var(--muted); font-size: 12px; margin-
 .field-row { display: flex; gap: 10px; }
 .field-row .field { flex: 1; margin: 18px 0; }
 .field-row .field.num { flex: 0 0 84px; }
+
+/* 상담 설문 단계 */
+fieldset.step { border: 0; padding: 0; margin: 0; min-width: 0; }
+.steps { display: flex; align-items: center; gap: 10px; margin: 18px 0 4px; }
+.step-count { font-size: 14px; font-weight: 700; color: var(--counsel); white-space: nowrap; }
+.step-bar { flex: 1; height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.step-bar span { display: block; height: 100%; width: 0; background: var(--counsel); border-radius: 999px; transition: width .2s; }
+.step-nav { display: flex; gap: 8px; }
+.step-nav .btn { flex: 1; padding: 14px; font-size: 17px; }
+.step-nav .btn.primary { width: auto; }
+#counsel .chip[aria-pressed="true"] { background: var(--counsel); border-color: var(--counsel); color: #fff; }

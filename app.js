@@ -51,7 +51,7 @@ const el = (tag, attrs = {}, ...children) => {
   return n;
 };
 
-let config = { competencies: [], counselTopics: [] };
+let config = { competencies: [], counselOptions: {} };
 let ideas = [];
 let filter = null;
 const selected = new Set();
@@ -222,45 +222,99 @@ $('#form').addEventListener('submit', async (e) => {
   }
 });
 
-// ---------- 진학 상담 고민 ----------
-// 민감한 내용이라 임시 저장하지 않고, 제출 후에는 화면에서도 지운다
-const topics = new Set();
+// ---------- 진로진학 상담 사전 설문 (3단계) ----------
+// 민감한 내용이라 임시 저장하지 않고, 제출 후에는 화면에서도 지운다.
+// 선택지 목록은 서버 config.counselOptions에서 받아 [data-group] 칸에 채운다.
+const picks = {}; // 그룹 이름 -> 고른 값(Set)
+const chipGroups = [...document.querySelectorAll('#counsel [data-group]')];
+const steps = [...document.querySelectorAll('#counsel .step')];
+let step = 1;
 
-const renderTopicChips = () => {
-  $('#topicChips').replaceChildren(...(config.counselTopics || []).map((t) => {
-    const b = el('button', { class: 'chip', type: 'button', 'aria-pressed': String(topics.has(t)) }, t);
-    b.addEventListener('click', () => {
-      topics.has(t) ? topics.delete(t) : topics.add(t);
-      b.setAttribute('aria-pressed', String(topics.has(t)));
-    });
-    return b;
-  }));
+const renderCounselChips = () => {
+  chipGroups.forEach((g) => {
+    const name = g.dataset.group;
+    const single = g.hasAttribute('data-single');
+    const chosen = (picks[name] = picks[name] || new Set());
+    g.replaceChildren(...((config.counselOptions || {})[name] || []).map((opt) => {
+      const b = el('button', { class: 'chip', type: 'button', 'aria-pressed': String(chosen.has(opt)) }, opt);
+      b.addEventListener('click', () => {
+        const on = !chosen.has(opt);
+        if (single) chosen.clear();
+        on ? chosen.add(opt) : chosen.delete(opt);
+        g.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', String(chosen.has(c.textContent))));
+      });
+      return b;
+    }));
+  });
 };
+const picked = (name) => [...(picks[name] || [])];
+
+const showStep = (n) => {
+  step = n;
+  steps.forEach((f) => (f.hidden = Number(f.dataset.step) !== n));
+  const cur = steps[n - 1];
+  $('#stepCount').textContent = `${n} / ${steps.length} · ${cur.dataset.name}`;
+  $('#stepBar').style.width = `${(n / steps.length) * 100}%`;
+  $('#stepPrev').hidden = n === 1;
+  $('#stepNext').hidden = n === steps.length;
+  $('#counselBtn').hidden = n !== steps.length;
+  $('#counselError').textContent = '';
+  window.scrollTo(0, 0);
+};
+
+// 단계별 필수 항목 확인. 문제가 있으면 안내 문구를 돌려준다.
+const checkStep = (n) => {
+  if (n === 1) {
+    const no = $('#cNo').value.trim();
+    if (!/^\d{1,2}$/.test(no) || Number(no) < 1) return ['번호를 숫자로 적어 주세요.', $('#cNo')];
+    if (!$('#cName').value.trim()) return ['이름을 적어 주세요.', $('#cName')];
+    if (!picked('plan').length) return ['졸업 후 계획을 하나 골라 주세요.'];
+  }
+  if (n === 3 && !picked('topics').length) return ['고민 분야를 하나 이상 골라 주세요.'];
+  return null;
+};
+
+const goNext = () => {
+  const bad = checkStep(step);
+  if (bad) {
+    $('#counselError').textContent = bad[0];
+    if (bad[1]) bad[1].focus();
+    return;
+  }
+  showStep(step + 1);
+};
+$('#stepNext').addEventListener('click', goNext);
+$('#stepPrev').addEventListener('click', () => showStep(step - 1));
 
 const resetCounsel = () => {
   $('#counselForm').reset();
-  topics.clear();
-  renderTopicChips();
+  Object.values(picks).forEach((set) => set.clear());
+  renderCounselChips();
   $('#cContent').dispatchEvent(new Event('input'));
   $('#cRequest').dispatchEvent(new Event('input'));
-  $('#counselError').textContent = '';
+  showStep(1);
 };
 
 $('#counselForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  $('#counselError').textContent = '';
-  const no = $('#cNo').value.trim();
-  if (!/^\d{1,2}$/.test(no) || Number(no) < 1) {
-    $('#counselError').textContent = '번호를 숫자로 적어 주세요.';
-    $('#cNo').focus();
-    return;
-  }
+  // 입력 칸에서 엔터를 누르면 제출 대신 다음 단계로
+  if (step < steps.length) return goNext();
+  const bad = checkStep(1) || checkStep(3);
+  if (bad) { $('#counselError').textContent = bad[0]; return; }
+
   const btn = $('#counselBtn');
   const label = btn.textContent;
   btn.disabled = true;
   btn.textContent = '보내는 중…';
+  const v = (id) => $(id).value;
   try {
-    await api('counsel', { no: Number(no), name: $('#cName').value, hope: $('#cHope').value, content: $('#cContent').value, request: $('#cRequest').value, topics: [...topics] });
+    await api('counsel', {
+      no: Number(v('#cNo').trim()), name: v('#cName'),
+      plan: picked('plan')[0] || '', decision: picked('decision')[0] || '', hope: v('#cHope'), fields: picked('fields'),
+      admission: picked('admission'), region: picked('region'), gradeFeel: picked('gradeFeel')[0] || '',
+      strong: v('#cStrong'), weak: v('#cWeak'),
+      topics: picked('topics'), content: v('#cContent'), request: v('#cRequest'),
+    });
     resetCounsel();
     $('#counselForm').hidden = true;
     $('#counselDone').hidden = false;
@@ -276,7 +330,7 @@ $('#counselForm').addEventListener('submit', async (e) => {
 $('#counselAgain').addEventListener('click', () => {
   $('#counselDone').hidden = true;
   $('#counselForm').hidden = false;
-  window.scrollTo(0, 0);
+  showStep(1);
 });
 
 // ---------- 화면 전환 (#ideas, #counsel, 그 외는 메뉴) ----------
@@ -309,6 +363,7 @@ window.addEventListener('hashchange', route);
 (async () => {
   $('#submitBtn').disabled = true;
   $('#counselBtn').disabled = true;
+  showStep(1);
   $('#list').replaceChildren(el('div', { class: 'empty' }, '아이디어를 불러오는 중…'));
   route();
   try {
@@ -327,7 +382,7 @@ window.addEventListener('hashchange', route);
   loadDraft();
   renderFilters();
   renderCompChips();
-  renderTopicChips();
+  renderCounselChips();
   document.querySelectorAll('textarea').forEach((t) => t.dispatchEvent(new Event('input')));
   route();
 })();

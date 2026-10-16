@@ -12,10 +12,22 @@ const SHEET_LIKES = '공감';
 const SHEET_SETTINGS = '설정';
 const SHEET_COUNSEL = '진학상담';
 
-const COUNSEL_TOPICS = ['성적·공부 방법', '대학·학과 선택', '수시·정시 전형', '진로·미래 고민', '전문대 진학', '위탁교육·취업', '생활기록부', '기타'];
-const COUNSEL_LIMITS = { name: 20, hope: 60, content: 2000, request: 1000 };
-const COUNSEL_REQUEST_HEADER = '선생님이 알아봐 줬으면 하는 것';
-const COUNSEL_HEADERS = ['제출 시각', '번호', '이름', '고민 분야', '희망 진로·학과', '고민 내용', COUNSEL_REQUEST_HEADER, '처리 상태', '메모'];
+// 진로진학 상담 사전 설문 선택지 (학생 화면의 [data-group] 이름과 같아야 한다)
+const COUNSEL_OPTIONS = {
+  plan: ['4년제 대학', '전문대', '취업', '위탁교육 후 취업', '군 진학', '아직 모르겠음'],
+  decision: ['확실히 정했어요', '2~3개로 좁혔어요', '관심 분야만 있어요', '전혀 모르겠어요'],
+  fields: ['인문', '사회·상경', '교육', '공학', '자연', '의약·보건', '예체능', '기술·직업'],
+  admission: ['학생부교과', '학생부종합', '정시(수능)', '실기·실적', '잘 모르겠음'],
+  region: ['서울', '경기·인천', '충청', '그 외 지역', '상관없음'],
+  gradeFeel: ['목표에 맞는 편', '조금 부족', '많이 부족', '잘 모르겠음'],
+  topics: ['성적·공부 방법', '대학·학과 선택', '수시·정시 전형', '진로·미래 고민', '전문대 진학', '위탁교육·취업', '생활기록부', '기타'],
+};
+const COUNSEL_LIMITS = { name: 20, hope: 60, subject: 40, content: 2000, request: 1000 };
+const COUNSEL_HEADERS = [
+  '제출 시각', '번호', '이름', '졸업 후 계획', '진로 결정 정도', '희망 진로·학과', '관심 계열',
+  '관심 전형', '희망 지역', '성적 체감', '자신 있는 과목', '어려운 과목',
+  '고민 분야', '고민 내용', '선생님이 알아봐 줬으면 하는 것', '처리 상태', '메모',
+];
 const COUNSEL_STATUS = ['접수', '상담 예정', '완료'];
 
 // 2022 개정 교육과정 핵심역량
@@ -93,30 +105,23 @@ function counselSheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sh = ss.getSheetByName(SHEET_COUNSEL);
   if (sh) {
-    // 이전 버전 시트에는 '번호' 열이 없으므로 B열에 끼워 넣는다 (기존 행은 번호 칸이 비어 있게 됨)
-    if (sh.getRange('B1').getValue() !== '번호') {
-      sh.insertColumnBefore(2);
-      sh.getRange('B1').setValue('번호').setFontWeight('bold').setBackground('#e8eef6');
-      sh.setColumnWidth(2, 50);
-    }
-    // '선생님이 알아봐 줬으면 하는 것' 열도 없으면 고민 내용 바로 뒤(G열)에 끼워 넣는다
-    if (sh.getRange('G1').getValue() !== COUNSEL_REQUEST_HEADER) {
-      sh.insertColumnBefore(7);
-      sh.getRange('G1').setValue(COUNSEL_REQUEST_HEADER).setFontWeight('bold').setBackground('#e8eef6');
-      sh.getRange('G:G').setWrap(true).setVerticalAlignment('top');
-      sh.setColumnWidth(7, 260);
-    }
-    return sh;
+    const head = sh.getRange(1, 1, 1, COUNSEL_HEADERS.length).getValues()[0];
+    if (head.join('|') === COUNSEL_HEADERS.join('|')) return sh;
+    // 질문지 형식이 바뀌었으므로 예전 기록은 이름만 바꿔 그대로 보관하고, 새 탭을 만든다
+    let old = SHEET_COUNSEL + '(이전)';
+    for (let i = 2; ss.getSheetByName(old); i++) old = SHEET_COUNSEL + '(이전' + i + ')';
+    sh.setName(old);
   }
   sh = ss.insertSheet(SHEET_COUNSEL, 1);
   sh.getRange(1, 1, 1, COUNSEL_HEADERS.length).setValues([COUNSEL_HEADERS]).setFontWeight('bold').setBackground('#e8eef6');
   sh.setFrozenRows(1);
+  sh.setFrozenColumns(3);
   sh.getRange('A:A').setNumberFormat('yyyy-mm-dd hh:mm');
-  sh.getRange('D:I').setWrap(true).setVerticalAlignment('top');
-  [120, 50, 70, 150, 140, 380, 260, 90, 240].forEach((w, i) => sh.setColumnWidth(i + 1, w));
+  sh.getRange('D:Q').setWrap(true).setVerticalAlignment('top');
+  [120, 45, 70, 110, 120, 130, 130, 130, 110, 100, 100, 100, 150, 320, 240, 90, 220].forEach((w, i) => sh.setColumnWidth(i + 1, w));
 
-  // 처리 상태: 드롭다운 + 색 구분
-  const status = sh.getRange('H2:H');
+  // 처리 상태(P열): 드롭다운 + 색 구분
+  const status = sh.getRange('P2:P');
   status.setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(COUNSEL_STATUS, true).build());
   const color = (text, bg) => SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(text).setBackground(bg).setRanges([status]).build();
   sh.setConditionalFormatRules([color('접수', '#fde8e4'), color('상담 예정', '#fff3cd'), color('완료', '#e3efe8')]);
@@ -165,7 +170,7 @@ function config_() {
   const s = settings_();
   return {
     className: s.className, open: s.open, competencies: COMPETENCIES, limits: LIMITS,
-    counselOpen: s.counselOpen, counselTopics: COUNSEL_TOPICS, counselLimits: COUNSEL_LIMITS,
+    counselOpen: s.counselOpen, counselOptions: COUNSEL_OPTIONS, counselLimits: COUNSEL_LIMITS,
   };
 }
 
@@ -223,28 +228,43 @@ function checkRate_(token) {
   cache.put(key, String(n + 1), 60);
 }
 
-// 진학 상담 고민: 시트에 적기만 하고 아무것도 돌려주지 않는다
+// 진로진학 상담 설문: 시트에 적기만 하고 아무것도 돌려주지 않는다
 function counsel_(req, token) {
   if (!settings_().counselOpen) throw new UserError('지금은 상담 신청을 받고 있지 않아요.');
   checkRate_(token);
 
+  // 목록에 있는 값만 받는다
+  const many = (key) => (Array.isArray(req[key]) ? COUNSEL_OPTIONS[key].filter((o) => req[key].indexOf(o) !== -1) : []);
+  const one = (key) => (COUNSEL_OPTIONS[key].indexOf(req[key]) !== -1 ? req[key] : '');
   const no = Number(req.no);
   const c = {
     no: Number.isInteger(no) && no >= 1 && no <= 99 ? no : null,
     name: clean_(req.name, COUNSEL_LIMITS.name),
+    plan: one('plan'),
+    decision: one('decision'),
     hope: clean_(req.hope, COUNSEL_LIMITS.hope),
-    request: clean_(req.request, COUNSEL_LIMITS.request),
+    fields: many('fields'),
+    admission: many('admission'),
+    region: many('region'),
+    gradeFeel: one('gradeFeel'),
+    strong: clean_(req.strong, COUNSEL_LIMITS.subject),
+    weak: clean_(req.weak, COUNSEL_LIMITS.subject),
+    topics: many('topics'),
     content: clean_(req.content, COUNSEL_LIMITS.content),
-    topics: Array.isArray(req.topics) ? COUNSEL_TOPICS.filter((t) => req.topics.indexOf(t) !== -1) : [],
+    request: clean_(req.request, COUNSEL_LIMITS.request),
   };
   const missing = [];
   if (!c.no) missing.push('번호');
   if (!c.name) missing.push('이름');
+  if (!c.plan) missing.push('졸업 후 계획');
   if (!c.topics.length) missing.push('고민 분야');
-  if (!c.content) missing.push('고민 내용');
   if (missing.length) throw new UserError(missing.join(', ') + '을(를) 입력해 주세요.');
 
-  counselSheet_().appendRow([new Date(), c.no, c.name, c.topics.join(', '), c.hope, c.content, c.request, '접수', '']);
+  counselSheet_().appendRow([
+    new Date(), c.no, c.name, c.plan, c.decision, c.hope, c.fields.join(', '),
+    c.admission.join(', '), c.region.join(', '), c.gradeFeel, c.strong, c.weak,
+    c.topics.join(', '), c.content, c.request, '접수', '',
+  ]);
   return { ok: true };
 }
 
