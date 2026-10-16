@@ -199,6 +199,7 @@ $('#form').addEventListener('submit', async (e) => {
   $('#formError').textContent = '';
   const body = { ...Object.fromEntries(fields.map((f) => [f, $('#' + f).value])), competencies: [...selected] };
   const btn = $('#submitBtn');
+  const label = btn.textContent; // 버튼 글자는 index.html에 적힌 그대로 되돌린다
   btn.disabled = true;
   btn.textContent = '제출하는 중…';
   try {
@@ -217,7 +218,7 @@ $('#form').addEventListener('submit', async (e) => {
     $('#formError').textContent = err.message;
   } finally {
     btn.disabled = !config.open;
-    btn.textContent = '아이디어 제출하기';
+    btn.textContent = label;
   }
 });
 
@@ -247,11 +248,18 @@ const resetCounsel = () => {
 $('#counselForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   $('#counselError').textContent = '';
+  const no = $('#cNo').value.trim();
+  if (!/^\d{1,2}$/.test(no) || Number(no) < 1) {
+    $('#counselError').textContent = '번호를 숫자로 적어 주세요.';
+    $('#cNo').focus();
+    return;
+  }
   const btn = $('#counselBtn');
+  const label = btn.textContent;
   btn.disabled = true;
   btn.textContent = '보내는 중…';
   try {
-    await api('counsel', { name: $('#cName').value, hope: $('#cHope').value, content: $('#cContent').value, topics: [...topics] });
+    await api('counsel', { no: Number(no), name: $('#cName').value, hope: $('#cHope').value, content: $('#cContent').value, topics: [...topics] });
     resetCounsel();
     $('#counselForm').hidden = true;
     $('#counselDone').hidden = false;
@@ -260,7 +268,7 @@ $('#counselForm').addEventListener('submit', async (e) => {
     $('#counselError').textContent = err.message;
   } finally {
     btn.disabled = !config.counselOpen;
-    btn.textContent = '선생님께 보내기';
+    btn.textContent = label;
   }
 });
 
@@ -271,17 +279,18 @@ $('#counselAgain').addEventListener('click', () => {
 });
 
 // ---------- 화면 전환 (#ideas, #counsel, 그 외는 메뉴) ----------
-const VIEW_TITLES = { ideas: '학급특색활동 아이디어 모음', counsel: '진학 상담 고민 보내기' };
+// 화면 제목은 index.html 각 section의 data-title에서 가져온다
 let ideasStarted = false;
 
 const route = () => {
   const view = location.hash === '#ideas' || location.hash === '#counsel' ? location.hash.slice(1) : 'home';
   document.querySelectorAll('[data-view]').forEach((s) => (s.hidden = s.dataset.view !== view));
+  const title = $(`[data-view="${view}"]`).dataset.title || '';
   $('#backLink').hidden = view === 'home';
   $('#ideaTabs').hidden = view !== 'ideas';
   $('#className').hidden = view === 'home';
-  $('#pageTitle').textContent = VIEW_TITLES[view] || config.className || '';
-  document.title = `${config.className || ''} ${VIEW_TITLES[view] || ''}`.trim();
+  $('#pageTitle').textContent = title || config.className || '';
+  document.title = `${config.className || ''} ${title}`.trim();
   if (view === 'counsel') {
     $('#counselDone').hidden = true;
     $('#counselForm').hidden = false;

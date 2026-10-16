@@ -26,21 +26,22 @@
   <main class="wrap">
     <!-- 메뉴 -->
     <section id="home" data-view="home" hidden>
-      <p class="home-lead">무엇을 하러 왔나요?</p>
+      <p class="home-lead">들어갈 메뉴 골라</p>
       <a class="menu-card" href="#ideas">
         <span class="menu-title">학급특색활동 아이디어</span>
         <span class="menu-desc">우리 반에서 해 보고 싶은 활동을 제안하고, 친구들의 아이디어에 공감해 보세요. 친구들에게는 익명으로 보여요.</span>
         <span class="menu-go">아이디어 보러 가기 →</span>
       </a>
       <a class="menu-card counsel" href="#counsel">
-        <span class="menu-title">진학 상담 고민 보내기</span>
+        <span class="menu-title">진로진학 상담 사전 설문</span>
         <span class="menu-desc">성적, 대학, 진로처럼 혼자 고민되는 이야기를 선생님께 보내 주세요. 선생님만 볼 수 있어요.</span>
         <span class="menu-go">고민 보내기 →</span>
       </a>
     </section>
 
     <!-- 학급특색활동 아이디어 -->
-    <section id="ideas" data-view="ideas" hidden>
+    <!-- data-title: 이 화면에 들어왔을 때 위쪽 제목 -->
+    <section id="ideas" data-view="ideas" data-title="학급특색활동 아이디어 모음" hidden>
       <section id="board">
         <div class="notice">
           <strong>학급 특색 활동은 생활기록부 자율, 자치 항목에 기재될 학급 내 활동입니다.</strong><br>
@@ -101,7 +102,7 @@
     </section>
 
     <!-- 진학 상담 고민 -->
-    <section id="counsel" data-view="counsel" hidden>
+    <section id="counsel" data-view="counsel" data-title="진로진학 상담 사전 설문" hidden>
       <div class="notice" id="counselClosed" hidden>
         <strong>지금은 상담 신청을 받고 있지 않아요.</strong> 급한 고민이라면 선생님께 직접 말해 주세요.
       </div>
@@ -111,9 +112,15 @@
       </div>
 
       <form id="counselForm" novalidate>
-        <div class="field">
-          <label for="cName">이름</label>
-          <input id="cName" autocomplete="off" placeholder="예: 메가홍균" maxlength="20">
+        <div class="field-row">
+          <div class="field num">
+            <label for="cNo">번호</label>
+            <input id="cNo" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="예: 7" maxlength="2">
+          </div>
+          <div class="field">
+            <label for="cName">이름</label>
+            <input id="cName" autocomplete="off" placeholder="예: 메가홍균" maxlength="20">
+          </div>
         </div>
         <div class="field">
           <span class="label">고민 분야</span>
@@ -143,12 +150,12 @@
           <div class="counter" data-for="cContent"></div>
         </div>
         <p class="error" id="counselError" role="alert"></p>
-        <button class="btn primary" type="submit" id="counselBtn">선생님께 보내기</button>
+        <button class="btn primary" type="submit" id="counselBtn">제출하기</button>
       </form>
 
       <div class="done" id="counselDone" hidden>
         <p class="done-title">선생님께 전달됐어요.</p>
-        <p>고민을 털어놓아 줘서 고마워요. 선생님이 읽어 보고 따로 이야기 나눌게요.</p>
+        <p>잘 읽어볼게요.</p>
         <button class="btn" type="button" id="counselAgain">다른 고민 더 보내기</button>
         <a class="btn" href="#">메뉴로 돌아가기</a>
       </div>
