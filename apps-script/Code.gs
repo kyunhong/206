@@ -14,7 +14,7 @@ const SHEET_COUNSEL = '진학상담';
 
 // 진로진학 상담 사전 설문 선택지 (학생 화면의 [data-group] 이름과 같아야 한다)
 const COUNSEL_OPTIONS = {
-  plan: ['4년제 대학', '전문대', '취업', '위탁교육 후 취업', '군 진학', '아직 모르겠음'],
+  plan: ['4년제 대학', '전문대', '취업', '위탁교육 후 취업', '군입대', '아직 모르겠음'],
   decision: ['확실히 정했어요', '2~3개로 좁혔어요', '관심 분야만 있어요', '전혀 모르겠어요'],
   fields: ['인문', '사회·상경', '교육', '공학', '자연', '의약·보건', '예체능', '기술·직업'],
   admission: ['학생부교과', '학생부종합', '정시(수능)', '실기·실적', '잘 모르겠음'],
@@ -22,10 +22,10 @@ const COUNSEL_OPTIONS = {
   gradeFeel: ['목표에 맞는 편', '조금 부족', '많이 부족', '잘 모르겠음'],
   topics: ['성적·공부 방법', '대학·학과 선택', '수시·정시 전형', '진로·미래 고민', '전문대 진학', '위탁교육·취업', '생활기록부', '기타'],
 };
-const COUNSEL_LIMITS = { name: 20, hope: 60, subject: 40, content: 2000, request: 1000 };
+const COUNSEL_LIMITS = { name: 20, hope: 60, content: 2000, request: 1000 };
 const COUNSEL_HEADERS = [
   '제출 시각', '번호', '이름', '졸업 후 계획', '진로 결정 정도', '희망 진로·학과', '관심 계열',
-  '관심 전형', '희망 지역', '성적 체감', '자신 있는 과목', '어려운 과목',
+  '관심 전형', '희망 지역', '성적 체감',
   '고민 분야', '고민 내용', '선생님이 알아봐 줬으면 하는 것', '처리 상태', '메모',
 ];
 const COUNSEL_STATUS = ['접수', '상담 예정', '완료'];
@@ -117,11 +117,11 @@ function counselSheet_() {
   sh.setFrozenRows(1);
   sh.setFrozenColumns(3);
   sh.getRange('A:A').setNumberFormat('yyyy-mm-dd hh:mm');
-  sh.getRange('D:Q').setWrap(true).setVerticalAlignment('top');
-  [120, 45, 70, 110, 120, 130, 130, 130, 110, 100, 100, 100, 150, 320, 240, 90, 220].forEach((w, i) => sh.setColumnWidth(i + 1, w));
+  sh.getRange('D:O').setWrap(true).setVerticalAlignment('top');
+  [120, 45, 70, 110, 120, 130, 130, 130, 110, 100, 150, 320, 240, 90, 220].forEach((w, i) => sh.setColumnWidth(i + 1, w));
 
-  // 처리 상태(P열): 드롭다운 + 색 구분
-  const status = sh.getRange('P2:P');
+  // 처리 상태(N열): 드롭다운 + 색 구분
+  const status = sh.getRange('N2:N');
   status.setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(COUNSEL_STATUS, true).build());
   const color = (text, bg) => SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(text).setBackground(bg).setRanges([status]).build();
   sh.setConditionalFormatRules([color('접수', '#fde8e4'), color('상담 예정', '#fff3cd'), color('완료', '#e3efe8')]);
@@ -247,8 +247,6 @@ function counsel_(req, token) {
     admission: many('admission'),
     region: many('region'),
     gradeFeel: one('gradeFeel'),
-    strong: clean_(req.strong, COUNSEL_LIMITS.subject),
-    weak: clean_(req.weak, COUNSEL_LIMITS.subject),
     topics: many('topics'),
     content: clean_(req.content, COUNSEL_LIMITS.content),
     request: clean_(req.request, COUNSEL_LIMITS.request),
@@ -262,7 +260,7 @@ function counsel_(req, token) {
 
   counselSheet_().appendRow([
     new Date(), c.no, c.name, c.plan, c.decision, c.hope, c.fields.join(', '),
-    c.admission.join(', '), c.region.join(', '), c.gradeFeel, c.strong, c.weak,
+    c.admission.join(', '), c.region.join(', '), c.gradeFeel,
     c.topics.join(', '), c.content, c.request, '접수', '',
   ]);
   return { ok: true };

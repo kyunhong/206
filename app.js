@@ -312,7 +312,6 @@ $('#counselForm').addEventListener('submit', async (e) => {
       no: Number(v('#cNo').trim()), name: v('#cName'),
       plan: picked('plan')[0] || '', decision: picked('decision')[0] || '', hope: v('#cHope'), fields: picked('fields'),
       admission: picked('admission'), region: picked('region'), gradeFeel: picked('gradeFeel')[0] || '',
-      strong: v('#cStrong'), weak: v('#cWeak'),
       topics: picked('topics'), content: v('#cContent'), request: v('#cRequest'),
     });
     resetCounsel();
