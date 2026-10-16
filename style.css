@@ -175,3 +175,11 @@ fieldset.step { border: 0; padding: 0; margin: 0; min-width: 0; }
 .step-nav .btn { flex: 1; padding: 14px; font-size: 17px; }
 .step-nav .btn.primary { width: auto; }
 #counsel .chip[aria-pressed="true"] { background: var(--counsel); border-color: var(--counsel); color: #fff; }
+
+/* 끝난 활동 (접힘) */
+.past { margin-top: 24px; }
+.past summary { cursor: pointer; color: var(--muted); font-size: 14px; padding: 8px 0; list-style: none; }
+.past summary::-webkit-details-marker { display: none; }
+.past summary::after { content: ' ▾'; }
+.past[open] summary::after { content: ' ▴'; }
+.past .menu-card { margin-top: 4px; }
