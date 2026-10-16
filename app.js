@@ -242,6 +242,7 @@ const resetCounsel = () => {
   topics.clear();
   renderTopicChips();
   $('#cContent').dispatchEvent(new Event('input'));
+  $('#cRequest').dispatchEvent(new Event('input'));
   $('#counselError').textContent = '';
 };
 
@@ -259,7 +260,7 @@ $('#counselForm').addEventListener('submit', async (e) => {
   btn.disabled = true;
   btn.textContent = '보내는 중…';
   try {
-    await api('counsel', { no: Number(no), name: $('#cName').value, hope: $('#cHope').value, content: $('#cContent').value, topics: [...topics] });
+    await api('counsel', { no: Number(no), name: $('#cName').value, hope: $('#cHope').value, content: $('#cContent').value, request: $('#cRequest').value, topics: [...topics] });
     resetCounsel();
     $('#counselForm').hidden = true;
     $('#counselDone').hidden = false;

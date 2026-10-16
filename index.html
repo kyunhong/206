@@ -149,6 +149,13 @@
           <textarea id="cContent" maxlength="2000" placeholder="지금 가장 고민되는 것을 편하게 적어 주세요."></textarea>
           <div class="counter" data-for="cContent"></div>
         </div>
+        <div class="field">
+          <label for="cRequest">선생님이 알아봐 줬으면 하는 것 <span class="optional">선택</span></label>
+          <p class="hint">상담 전에 선생님이 미리 찾아봐 주면 좋을 것을 적어 주세요.</p>
+          <textarea id="cRequest" maxlength="1000"
+            placeholder="예: 내 성적으로 갈 수 있는 4년제, 전문대 학교 / 위탁교육 학과 / 성적 반영 과목이 적은 학교 / 충청권 학교"></textarea>
+          <div class="counter" data-for="cRequest"></div>
+        </div>
         <p class="error" id="counselError" role="alert"></p>
         <button class="btn primary" type="submit" id="counselBtn">제출하기</button>
       </form>

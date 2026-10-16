@@ -13,8 +13,9 @@ const SHEET_SETTINGS = '설정';
 const SHEET_COUNSEL = '진학상담';
 
 const COUNSEL_TOPICS = ['성적·공부 방법', '대학·학과 선택', '수시·정시 전형', '진로·미래 고민', '전문대 진학', '위탁교육·취업', '생활기록부', '기타'];
-const COUNSEL_LIMITS = { name: 20, hope: 60, content: 2000 };
-const COUNSEL_HEADERS = ['제출 시각', '번호', '이름', '고민 분야', '희망 진로·학과', '고민 내용', '처리 상태', '메모'];
+const COUNSEL_LIMITS = { name: 20, hope: 60, content: 2000, request: 1000 };
+const COUNSEL_REQUEST_HEADER = '선생님이 알아봐 줬으면 하는 것';
+const COUNSEL_HEADERS = ['제출 시각', '번호', '이름', '고민 분야', '희망 진로·학과', '고민 내용', COUNSEL_REQUEST_HEADER, '처리 상태', '메모'];
 const COUNSEL_STATUS = ['접수', '상담 예정', '완료'];
 
 // 2022 개정 교육과정 핵심역량
@@ -98,17 +99,24 @@ function counselSheet_() {
       sh.getRange('B1').setValue('번호').setFontWeight('bold').setBackground('#e8eef6');
       sh.setColumnWidth(2, 50);
     }
+    // '선생님이 알아봐 줬으면 하는 것' 열도 없으면 고민 내용 바로 뒤(G열)에 끼워 넣는다
+    if (sh.getRange('G1').getValue() !== COUNSEL_REQUEST_HEADER) {
+      sh.insertColumnBefore(7);
+      sh.getRange('G1').setValue(COUNSEL_REQUEST_HEADER).setFontWeight('bold').setBackground('#e8eef6');
+      sh.getRange('G:G').setWrap(true).setVerticalAlignment('top');
+      sh.setColumnWidth(7, 260);
+    }
     return sh;
   }
   sh = ss.insertSheet(SHEET_COUNSEL, 1);
   sh.getRange(1, 1, 1, COUNSEL_HEADERS.length).setValues([COUNSEL_HEADERS]).setFontWeight('bold').setBackground('#e8eef6');
   sh.setFrozenRows(1);
   sh.getRange('A:A').setNumberFormat('yyyy-mm-dd hh:mm');
-  sh.getRange('D:H').setWrap(true).setVerticalAlignment('top');
-  [120, 50, 70, 150, 140, 380, 90, 240].forEach((w, i) => sh.setColumnWidth(i + 1, w));
+  sh.getRange('D:I').setWrap(true).setVerticalAlignment('top');
+  [120, 50, 70, 150, 140, 380, 260, 90, 240].forEach((w, i) => sh.setColumnWidth(i + 1, w));
 
   // 처리 상태: 드롭다운 + 색 구분
-  const status = sh.getRange('G2:G');
+  const status = sh.getRange('H2:H');
   status.setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(COUNSEL_STATUS, true).build());
   const color = (text, bg) => SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(text).setBackground(bg).setRanges([status]).build();
   sh.setConditionalFormatRules([color('접수', '#fde8e4'), color('상담 예정', '#fff3cd'), color('완료', '#e3efe8')]);
@@ -225,6 +233,7 @@ function counsel_(req, token) {
     no: Number.isInteger(no) && no >= 1 && no <= 99 ? no : null,
     name: clean_(req.name, COUNSEL_LIMITS.name),
     hope: clean_(req.hope, COUNSEL_LIMITS.hope),
+    request: clean_(req.request, COUNSEL_LIMITS.request),
     content: clean_(req.content, COUNSEL_LIMITS.content),
     topics: Array.isArray(req.topics) ? COUNSEL_TOPICS.filter((t) => req.topics.indexOf(t) !== -1) : [],
   };
@@ -235,7 +244,7 @@ function counsel_(req, token) {
   if (!c.content) missing.push('고민 내용');
   if (missing.length) throw new UserError(missing.join(', ') + '을(를) 입력해 주세요.');
 
-  counselSheet_().appendRow([new Date(), c.no, c.name, c.topics.join(', '), c.hope, c.content, '접수', '']);
+  counselSheet_().appendRow([new Date(), c.no, c.name, c.topics.join(', '), c.hope, c.content, c.request, '접수', '']);
   return { ok: true };
 }
 
