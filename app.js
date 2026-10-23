@@ -379,7 +379,12 @@ const renderActivityFilters = () => {
 
 const actCard = (a) => {
   const radio = el('input', { type: 'radio', name: 'activity', value: String(a.id) });
-  radio.addEventListener('change', () => { actPick = a.id; $('#activityError').textContent = ''; paintPick(); });
+  // 라디오는 원래 해제가 안 되므로, 이미 고른 카드를 다시 누르면 직접 해제한다
+  radio.addEventListener('click', () => {
+    actPick = actPick === a.id ? null : a.id;
+    $('#activityError').textContent = '';
+    paintPick();
+  });
   const more = el('button', { class: 'more', type: 'button', 'aria-expanded': 'false' }, '자세히 ▾');
   const c = el('div', { class: 'act', 'data-id': String(a.id) },
     el('label', { class: 'act-pick' },
