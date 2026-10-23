@@ -332,12 +332,154 @@ $('#counselAgain').addEventListener('click', () => {
   showStep(1);
 });
 
-// ---------- 화면 전환 (#ideas, #counsel, 그 외는 메뉴) ----------
+// ---------- 학급특색활동 고르기 ----------
+// 마지막으로 낸 학번·이름·활동은 이 기기에만 기억해 두고, 다시 들어오면 채워 준다.
+const ACT_KEY = 'activityChoice';
+let actFilter = null;
+let actPick = null; // 고른 활동 번호
+
+const actById = (id) => (config.activities || []).find((a) => a.id === id);
+
+const sidHint = () => {
+  const sid = $('#aSid').value.trim();
+  const hint = $('#aSidHint');
+  hint.classList.remove('bad');
+  if (!sid) { hint.textContent = ''; return; }
+  if (/^\d{5}$/.test(sid) && sid.startsWith(config.classId || '') && Number(sid.slice(3)) >= 1) {
+    hint.textContent = `${sid[0]}학년 ${Number(sid.slice(1, 3))}반 ${Number(sid.slice(3))}번`;
+  } else if (sid.length === 5) {
+    hint.textContent = `우리 반 학번은 ${config.classId}으로 시작하는 5자리예요.`;
+    hint.classList.add('bad');
+  } else {
+    hint.textContent = '학번 5자리를 입력해 주세요.';
+  }
+};
+$('#aSid').addEventListener('input', () => {
+  $('#aSid').value = $('#aSid').value.replace(/\D/g, '');
+  sidHint();
+});
+
+const paintPick = () => {
+  const a = actById(actPick);
+  $('#pickNow').textContent = a ? `${a.id}. ${a.title}` : '활동을 하나 골라 주세요';
+  $('#pickNow').classList.toggle('on', !!a);
+  document.querySelectorAll('#activityList .act').forEach((c) => {
+    const on = Number(c.dataset.id) === actPick;
+    c.classList.toggle('picked', on);
+    c.querySelector('input').checked = on;
+  });
+};
+
+const renderActivityFilters = () => {
+  $('#activityFilters').replaceChildren(
+    ...[null, ...(config.activityCategories || [])].map((c) =>
+      el('button', { class: 'chip', type: 'button', 'aria-pressed': String(actFilter === c), onclick: () => { actFilter = c; renderActivityFilters(); renderActivities(); } }, c || '전체'))
+  );
+};
+
+const actCard = (a) => {
+  const radio = el('input', { type: 'radio', name: 'activity', value: String(a.id) });
+  radio.addEventListener('change', () => { actPick = a.id; $('#activityError').textContent = ''; paintPick(); });
+  const more = el('button', { class: 'more', type: 'button', 'aria-expanded': 'false' }, '자세히 ▾');
+  const c = el('div', { class: 'act', 'data-id': String(a.id) },
+    el('label', { class: 'act-pick' },
+      radio,
+      el('span', { class: 'act-no' }, String(a.id)),
+      el('span', { class: 'act-body' },
+        el('span', { class: 'act-title' }, a.title),
+        el('span', { class: 'act-cat' }, a.cat))),
+    el('p', { class: 'act-desc' }, a.desc),
+    more);
+  more.addEventListener('click', () => {
+    const open = c.classList.toggle('open');
+    more.setAttribute('aria-expanded', String(open));
+    more.textContent = open ? '접기 ▴' : '자세히 ▾';
+  });
+  return c;
+};
+
+const renderActivities = () => {
+  const all = config.activities || [];
+  const rows = all.filter((a) => !actFilter || a.cat === actFilter);
+  $('#activityCount').textContent = actFilter ? `${actFilter} ${rows.length}개` : `활동 ${all.length}개`;
+  $('#activityList').replaceChildren(...rows.map(actCard));
+  paintPick();
+};
+
+const loadChoice = () => {
+  try { return JSON.parse(localStorage.getItem(ACT_KEY) || 'null'); } catch { return null; }
+};
+const showMine = () => {
+  const d = loadChoice();
+  const a = d && actById(d.activity);
+  $('#activityMine').hidden = !a;
+  if (a) $('#activityMine').replaceChildren(el('strong', {}, '이 기기에서 이미 제출했어요.'), el('br'), `${d.sid} ${d.name} · ${a.id}. ${a.title}`);
+};
+
+$('#activityForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = $('#activityError');
+  err.textContent = '';
+  const sid = $('#aSid').value.trim();
+  const name = $('#aName').value.trim();
+  if (!/^\d{5}$/.test(sid) || !sid.startsWith(config.classId) || Number(sid.slice(3)) < 1) {
+    err.textContent = `학번을 확인해 주세요. 우리 반 학번은 ${config.classId}으로 시작하는 5자리예요.`;
+    $('#aSid').focus();
+    return;
+  }
+  if (!name) { err.textContent = '이름을 입력해 주세요.'; $('#aName').focus(); return; }
+  const a = actById(actPick);
+  if (!a) { err.textContent = '활동을 하나 골라 주세요.'; return; }
+  if (!confirm(`${sid} ${name}\n${a.id}. ${a.title}\n\n이 활동으로 제출할까요?`)) return;
+
+  const btn = $('#activityBtn');
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '보내는 중…';
+  try {
+    const r = await api('activity', { sid, name, activity: a.id });
+    try { localStorage.setItem(ACT_KEY, JSON.stringify({ sid, name, activity: a.id })); } catch {}
+    $('#activityDoneTitle').textContent = r.updated ? '선택을 바꿨어요.' : '제출했어요.';
+    $('#activityDoneText').textContent = `${a.id}. ${a.title}`;
+    $('#activityForm').hidden = true;
+    $('#activityMine').hidden = true;
+    $('#activityDone').hidden = false;
+    window.scrollTo(0, 0);
+  } catch (ex) {
+    err.textContent = ex.message;
+  } finally {
+    btn.disabled = !config.activityOpen;
+    btn.textContent = label;
+  }
+});
+
+$('#activityAgain').addEventListener('click', () => {
+  $('#activityDone').hidden = true;
+  $('#activityForm').hidden = false;
+  showMine();
+  window.scrollTo(0, 0);
+});
+
+const startActivity = () => {
+  const d = loadChoice();
+  if (d) {
+    if (!$('#aSid').value) $('#aSid').value = d.sid || '';
+    if (!$('#aName').value) $('#aName').value = d.name || '';
+    if (actPick == null && actById(d.activity)) actPick = d.activity;
+  }
+  sidHint();
+  showMine();
+  renderActivityFilters();
+  renderActivities();
+};
+
+// ---------- 화면 전환 (#ideas, #counsel, #activity, 그 외는 메뉴) ----------
 // 화면 제목은 index.html 각 section의 data-title에서 가져온다
 let ideasStarted = false;
+const VIEWS = ['ideas', 'counsel', 'activity'];
 
 const route = () => {
-  const view = location.hash === '#ideas' || location.hash === '#counsel' ? location.hash.slice(1) : 'home';
+  const view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'home';
   document.querySelectorAll('[data-view]').forEach((s) => (s.hidden = s.dataset.view !== view));
   const title = $(`[data-view="${view}"]`).dataset.title || '';
   $('#backLink').hidden = view === 'home';
@@ -348,6 +490,11 @@ const route = () => {
   if (view === 'counsel') {
     $('#counselDone').hidden = true;
     $('#counselForm').hidden = false;
+  }
+  if (view === 'activity') {
+    $('#activityDone').hidden = true;
+    $('#activityForm').hidden = false;
+    showMine();
   }
   if (view === 'ideas' && !ideasStarted && config.competencies.length) {
     ideasStarted = true;
@@ -362,13 +509,16 @@ window.addEventListener('hashchange', route);
 (async () => {
   $('#submitBtn').disabled = true;
   $('#counselBtn').disabled = true;
+  $('#activityBtn').disabled = true;
   showStep(1);
   $('#list').replaceChildren(el('div', { class: 'empty' }, '아이디어를 불러오는 중…'));
+  $('#activityList').replaceChildren(el('div', { class: 'empty' }, '활동 목록을 불러오는 중…'));
   route();
   try {
     config = await api('config');
   } catch (e) {
     $('#list').replaceChildren(el('div', { class: 'empty' }, e.message));
+    $('#activityList').replaceChildren(el('div', { class: 'empty' }, e.message));
     $('#counselError').textContent = e.message;
     toast(e.message);
     return;
@@ -378,6 +528,9 @@ window.addEventListener('hashchange', route);
   $('#submitBtn').disabled = !config.open;
   $('#counselClosed').hidden = config.counselOpen;
   $('#counselBtn').disabled = !config.counselOpen;
+  $('#activityClosed').hidden = config.activityOpen;
+  $('#activityBtn').disabled = !config.activityOpen;
+  startActivity();
   loadDraft();
   renderFilters();
   renderCompChips();
